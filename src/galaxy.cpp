@@ -1,41 +1,70 @@
 #include <iostream>
-#include <string>
 #include "parser.h"
-#include "vcs.h"   // ✅ Includes only the header, avoiding duplicate function definitions
-#include "utils.h"
+#include "vcs.h"
+#include "branch.h"
+#include "config.h"
 
 using namespace std;
 
-int main(int argc, char* argv[]) {
-    if (argc < 2) {
-        cout << "Usage: galaxy <command> [args]\n";
-        return 1;
+int main() {
+    loadConfig();  
+
+    string input;
+    cout << "\n🌌  Welcome to Galaxy VCS 🌌\n";
+    cout << "------------------------------\n";
+
+    while (true) {
+        cout << "Galaxy > ";
+        getline(cin, input);
+        if (input == "exit") break;
+
+        CommandType command = parseCommand(input);
+
+        switch (command) {
+            case INIT:
+                initRepo();
+                break;
+            case ADD:
+                cout << "Enter file name: ";
+                getline(cin, input);
+                addFile(input);
+                break;
+            case COMMIT:
+                cout << "Enter commit message: ";
+                getline(cin, input);
+                commit(input);
+                break;
+            case LOG:
+                showLog();
+                break;
+            case RESET:
+                resetRepo();
+                break;
+            case TAG:
+                cout << "Enter tag name: ";
+                getline(cin, input);
+                createTag(input);
+                break;
+            case BRANCH:
+                cout << "Enter branch name: ";
+                getline(cin, input);
+                createBranch(input);
+                break;
+            case MERGE:
+                cout << "Enter branch to merge: ";
+                getline(cin, input);
+                mergeBranch(input);
+                break;
+            case CONFIG:
+                cout << "Enter theme (dark/light): ";
+                getline(cin, input);
+                setTheme(input);
+                break;
+            default:
+                cout << "⚠️ Unknown command\n";
+        }
     }
 
-    string cmd = argv[1];
-    CommandType command = parseCommand(cmd);
-
-    switch (command) {
-        case INIT:
-            initRepo();
-            break;
-        case ADD:
-            if (argc < 3) cout << "Usage: galaxy add <file>\n";
-            else addFile(argv[2]);
-            break;
-        case COMMIT:
-            if (argc < 3) cout << "Usage: galaxy commit \"message\"\n";
-            else commit(argv[2]);
-            break;
-        case LOG:
-            showLog();
-            break;
-        case CHECKOUT:
-            if (argc < 3) cout << "Usage: galaxy checkout <commit_hash>\n";
-            else checkout(argv[2]);
-            break;
-        default:
-            cout << "Unknown command\n";
-    }
+    cout << "👋 Exiting Galaxy VCS...\n";
     return 0;
 }

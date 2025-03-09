@@ -1,5 +1,5 @@
 #include "vcs.h"
-#include "utils.h"  // ✅ Ensures hashing functions are accessible
+#include "utils.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -11,7 +11,7 @@ namespace fs = filesystem;
 
 void initRepo() {
     if (fs::exists(".galaxy")) {
-        cout << "Repository already exists.\n";
+        cout << "❌ Repository already initialized.\n";
         return;
     }
     fs::create_directory(".galaxy");
@@ -19,12 +19,12 @@ void initRepo() {
     ofstream head(".galaxy/HEAD");
     head << "ref: refs/heads/main\n";
     head.close();
-    cout << "Initialized Galaxy repository.\n";
+    cout << "✅ Initialized Galaxy repository.\n";
 }
 
 void addFile(string filename) {
     if (!fs::exists(filename)) {
-        cout << "Error: File not found!\n";
+        cout << "❌ Error: File not found!\n";
         return;
     }
     ofstream index(".galaxy/index", ios::app);
@@ -32,7 +32,7 @@ void addFile(string filename) {
     index << filename << " " << hash << endl;
     
     fs::copy_file(filename, ".galaxy/objects/" + hash, fs::copy_options::overwrite_existing);
-    cout << "Added " << filename << " to staging area.\n";
+    cout << "✅ Added " << filename << " to staging area.\n";
 }
 
 void commit(string message) {
@@ -60,7 +60,7 @@ void commit(string message) {
     head << commitHash;
     head.close();
 
-    cout << "Committed: " << commitHash.substr(0, 7) << " - " << message << endl;
+    cout << "✅ Committed: " << commitHash.substr(0, 7) << " - " << message << endl;
 }
 
 void showLog() {
@@ -85,46 +85,22 @@ void showLog() {
     }
 }
 
-void checkout(string commitHash) {
-    string commitFile = ".galaxy/objects/" + commitHash;
+void resetRepo() {
+    fs::remove_all(".galaxy");
+    cout << "🛑 Repository has been reset!\n";
+}
 
-    if (!fs::exists(commitFile)) {
-        cout << "Error: Commit not found!\n";
+void createTag(string tagName) {
+    ofstream tagFile(".galaxy/tags/" + tagName);
+    if (!tagFile) {
+        cout << "❌ Could not create tag!\n";
         return;
     }
-
-    ifstream commitData(commitFile);
-    string line;
-    vector<pair<string, string>> files;
-
-    while (getline(commitData, line)) {
-        if (line.find("Commit:") == 0 || line.find("Message:") == 0) {
-            continue;
-        }
-        string filename, hash;
-        stringstream ss(line);
-        ss >> filename >> hash;
-        files.push_back({filename, hash});
-    }
-    commitData.close();
-
-    for (auto &entry : files) {
-        string filename = entry.first;
-        string hash = entry.second;
-        string objectFile = ".galaxy/objects/" + hash;
-
-        if (!fs::exists(objectFile)) {
-            cout << "Warning: File " << filename << " not found in objects\n";
-            continue;
-        }
-
-        fs::copy_file(objectFile, filename, fs::copy_options::overwrite_existing);
-        cout << "Restored: " << filename << endl;
-    }
-
-    ofstream head(".galaxy/HEAD");
-    head << commitHash;
+    ifstream head(".galaxy/HEAD");
+    string commitHash;
+    getline(head, commitHash);
     head.close();
-
-    cout << "Checked out to commit: " << commitHash << endl;
+    tagFile << commitHash;
+    tagFile.close();
+    cout << "🏷️  Tag created: " << tagName << endl;
 }

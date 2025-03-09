@@ -3,8 +3,8 @@
 
 #include <string>
 
-enum CommandType { INIT, ADD, COMMIT, LOG, CHECKOUT, UNKNOWN };
+enum CommandType { INIT, ADD, COMMIT, LOG, CHECKOUT, CONFIG, BRANCH, MERGE, RESET, TAG, UNKNOWN };
 
-CommandType parseCommand(const std::string& cmd);
+CommandType parseCommand(const std::string& input);
 
 #endif
